@@ -1,3 +1,6 @@
-__pycache__
+__pycache__/
+pybot/__pycache__/
+pybot/libraries/__pycache__/
+pybot/data/__pycache__/
 *.log
-data.json
+pybot/data/*

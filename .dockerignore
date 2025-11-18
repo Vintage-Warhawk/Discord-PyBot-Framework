@@ -1,6 +1,0 @@
-build.bat
-docker-compose.yml
-Dockerfile
-.git
-__pycache__
-*.log
