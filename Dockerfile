@@ -19,7 +19,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy all project files into the container
-COPY . .
+COPY pybot/ /app/pybot/
 
 # Default command to run the bot
-CMD ["python", "-u", "bot.py"]
+CMD ["python", "-u", "pybot/bot.py"]

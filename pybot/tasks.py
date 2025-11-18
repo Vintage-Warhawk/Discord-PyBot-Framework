@@ -11,8 +11,8 @@ Discord client instance. Tasks can access guild-specific configuration to send m
 to designated channels.
 """
 
-from tasks_manager import TaskManager
-from config import GetConfig
+from library.tasks_manager import TaskManager
+from library.config_manager import GetConfig
 
 # Create a TaskManager instance to register tasks
 manager = TaskManager()
@@ -41,7 +41,7 @@ class HourlyTask:
                     await channel.send("Hourly task executed!")
 
 # Register the hourly task
-manager.register_task("hourly", HourlyTask())
+manager.register_task("hourly", "Example Task", HourlyTask())
 
 # -----------------------------
 # Example Task: Daily
@@ -67,7 +67,7 @@ class DailyTask:
                     await channel.send("Daily task executed!")
 
 # Register the daily task
-manager.register_task("daily", DailyTask())
+manager.register_task("daily", "Example Task", DailyTask())
 
 # -----------------------------
 # Example Task: Test
@@ -85,4 +85,4 @@ manager.register_task("daily", DailyTask())
 #                 if channel:
 #                     await channel.send("Test task executed!")
 #
-# manager.register_task("test", TestTask())
+# manager.register_task("test", "Example Task", TestTask())

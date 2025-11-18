@@ -59,28 +59,39 @@ class MyClient(discord.Client):
         async def hourly_loop():
             while True:
                 now = datetime.now(TIMEZONE)
-                # Calculate seconds until the next full hour
-                next_hour = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+
+                next_hour = (now + timedelta(hours=1)).replace(
+                    minute=0, second=0, microsecond=0
+                )
                 await asyncio.sleep((next_hour - now).total_seconds())
-                for task in manager.get_tasks("hourly"):
+
+                for name, task in manager.get_tasks("hourly"):
+                    print(f"\033[36m[Hourly]\033[0m Running task: {name}")
                     await task.run(self)
 
-        # Loop for daily tasks (runs at 12:00 noon)
+
+        # Loop for daily tasks
         async def daily_loop():
             while True:
                 now = datetime.now(TIMEZONE)
+
                 next_noon = now.replace(hour=12, minute=0, second=0, microsecond=0)
                 if now >= next_noon:
                     next_noon += timedelta(days=1)
+
                 await asyncio.sleep((next_noon - now).total_seconds())
-                for task in manager.get_tasks("daily"):
+
+                for name, task in manager.get_tasks("daily"):
+                    print(f"\033[33m[Daily]\033[0m Running task: {name}")
                     await task.run(self)
+
 
         # Test loop that runs every 10 seconds for development
         async def test_loop():
             while True:
                 await asyncio.sleep(10)
-                for task in manager.get_tasks("test"):
+                for name, task in manager.get_tasks("test"):
+                    print(f"\033[31m[Testing]\033[0m Running task: {name}")
                     await task.run(self)
 
         # Start all loops concurrently
@@ -94,6 +105,7 @@ async def main():
     Async entry point for the bot.
     Uses asyncio.run to start the client asynchronously.
     """
+    print(f"\033[33mStarting PyBot...\033[0m")
     client = MyClient(intents=intents)
     await client.start(os.getenv("DISCORD_TOKEN"))  # Bot token should be set as environment variable
 

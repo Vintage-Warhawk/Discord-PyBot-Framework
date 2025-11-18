@@ -10,8 +10,8 @@ class must implement an asynchronous `run` method that handles the logic
 when the command is invoked.
 """
 
-from hook_manager import HookManager
-from config import SetConfig
+from library.hook_manager import HookManager
+from library.config_manager import SetConfig
 
 # Create a HookManager instance for registering commands
 manager = HookManager()
@@ -74,6 +74,7 @@ class HomeCommand:
 
         # Store the channel ID for this guild in the config system
         SetConfig("home_channels", str(message.channel.id), guild_id=message.guild.id)
+        print(f"\033[33m[Log] new home directory set: {message.channel.name} ({message.channel.id})\033[0m")
         await message.channel.send(f"This channel is now set as the home channel for this server!")
 
 # Register the !home command

@@ -23,15 +23,16 @@ class TaskManager:
         """
         self.tasks = {}  # {"hourly": [...], "daily": [...]}
 
-    def register_task(self, interval_name: str, task):
+    def register_task(self, interval_name: str, name: str, task):
         """
         Register a task under a specific interval.
 
         Args:
-            interval_name (str): The interval name, e.g., "hourly", "daily", "test".
-            task: An instance of a class implementing an async `run(client)` method.
+            interval_name (str): e.g., "hourly", "daily"
+            name (str): task name for logs and identification
+            task: instance with async run(client)
         """
-        self.tasks.setdefault(interval_name, []).append(task)
+        self.tasks.setdefault(interval_name, {})[name] = task
 
     def get_tasks(self, interval_name: str):
         """

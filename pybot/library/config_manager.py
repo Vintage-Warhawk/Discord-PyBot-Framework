@@ -13,7 +13,8 @@ import json
 import os
 
 # The JSON file that stores all persistent configuration data
-CONFIG_FILE = "data.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILE = os.path.abspath(os.path.join(BASE_DIR, "..", "data", "data.json"))
 
 class Config:
     """

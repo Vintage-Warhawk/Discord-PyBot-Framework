@@ -56,4 +56,5 @@ class HookManager:
 
         if trigger in self.hooks:
             handler = self.hooks[trigger]
+            print(f"\033[33m[Command]\033[32m {message.author.name}\033[0m Called command: \033[33m{args[0]}\033[0m")
             await handler.run(message, args)
