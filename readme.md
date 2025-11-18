@@ -18,10 +18,8 @@ This is a Python-based Discord bot framework that supports:
 
 ## Requirements
 
-- Python 3.12 or higher
 - Docker installed and running on your machine
 - Discord Bot Token
-- Bash support if using `build.sh`
 
 Python dependencies are installed automatically via Docker.
 
