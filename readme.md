@@ -155,5 +155,4 @@ Data is stored in `data.json` and persisted in Docker.
 
 Ensure the bot has message content intent enabled in the Discord Developer Portal.
 Tasks and commands are modular and can be extended by creating new classes and registering them with the manager.
-Review all code changes before committing to the repository.
 
