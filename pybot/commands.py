@@ -74,7 +74,7 @@ class HomeCommand:
 
         # Store the channel ID for this guild in the config system
         SetConfig("home_channels", str(message.channel.id), guild_id=message.guild.id)
-        print(f"\033[33m[Log] new home directory set: {message.channel.name} ({message.channel.id})\033[0m")
+        print(f"\033[33m[Config]\033[0m new home directory set: \033[33m{message.channel.name} ({message.channel.id})\033[0m")
         await message.channel.send(f"This channel is now set as the home channel for this server!")
 
 # Register the !home command
