@@ -157,3 +157,9 @@ Data is stored in `data.json` and persisted in Docker.
 Ensure the bot has message content intent enabled in the Discord Developer Portal.
 Tasks and commands are modular and can be extended by creating new classes and registering them with the manager.
 
+## License
+
+This project is released into the public domain. You can use, modify, distribute, or sell the code with **no restrictions and no attribution required**.
+
+See the [LICENSE](./LICENSE) file for full details.
+
