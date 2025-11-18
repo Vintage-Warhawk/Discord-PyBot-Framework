@@ -119,7 +119,7 @@ class HourlyTask:
             channel = guild.text_channels[0]
             await channel.send("Hourly task executed!")
 
-manager.register_task("hourly", HourlyTask())
+manager.register_task("hourly", "Task_Name", HourlyTask())
 ```
 
 Supported intervals: `hourly` and `daily`.
