@@ -1,6 +1,16 @@
 #!/bin/bash
+# File: build.sh
+# Maintainer: Vintage Warhawk
+# Last Edit: 2025-11-17
+#
+# Description:
+# This shell script builds and starts the Discord bot Docker container on Linux/macOS.
+# It prompts the user for their Discord bot token, sets it as an environment variable,
+# and runs docker-compose to build and launch the container. Includes basic error handling.
 
+# -----------------------------
 # Function to prompt for Discord token
+# -----------------------------
 prompt_token() {
     read -p "Please enter your Discord Token: " DISCORD_TOKEN
     echo "Using token: $DISCORD_TOKEN"
@@ -29,10 +39,12 @@ prompt_token() {
     done
 }
 
+# -----------------------------
 # Function to continue with Docker compose
+# -----------------------------
 continue_action() {
     echo "Creating Discord bot..."
-    # Pass the token as an environment variable
+    # Pass the token as an environment variable to Docker Compose
     DISCORD_TOKEN="$DISCORD_TOKEN" docker compose up -d --build
     if [ $? -ne 0 ]; then
         echo "An error occurred while building or starting the container."
@@ -43,11 +55,15 @@ continue_action() {
     exit 0
 }
 
-# Function to exit
+# -----------------------------
+# Function to exit the script
+# -----------------------------
 exit_action() {
     echo "Exiting."
     exit 0
 }
 
+# -----------------------------
 # Start the script
+# -----------------------------
 prompt_token

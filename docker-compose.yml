@@ -1,12 +1,33 @@
+# File: docker-compose.yml
+# Maintainer: Vintage Warhawk
+# Last Edit: 2025-11-17
+#
+# Description:
+# This Docker Compose file defines a single service for running the Discord bot.
+# It builds the container from the local Dockerfile, sets the DISCORD_TOKEN environment
+# variable, mounts the current directory into the container for live code access, and
+# ensures the bot restarts automatically unless stopped.
+
 version: "3.9"
 
 services:
   discord-bot:
+    # Build the container using the Dockerfile in the current directory
     build: .
+    
+    # Name of the container
     container_name: discord_bot
+    
+    # Restart policy: restart unless the container is manually stopped
     restart: unless-stopped
+    
+    # Environment variables passed into the container
     environment:
-      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - DISCORD_TOKEN=${DISCORD_TOKEN}  # Passed from host environment
+    
+    # Mount current directory into container at /app for live code access
     volumes:
       - .:/app
+    
+    # Default command to run when container starts
     command: python bot.py
