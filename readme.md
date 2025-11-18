@@ -159,7 +159,8 @@ Tasks and commands are modular and can be extended by creating new classes and r
 
 ## License
 
-This project is released into the public domain. You can use, modify, distribute, or sell the code with **no restrictions and no attribution required**.
+This project is released under a non-commercial license. You can use, modify, distribute, or sublicense the code for **non-commercial purposes only**, and no attribution is required.
+
+Commercial use or any use intended to generate profit is strictly prohibited.
 
 See the [LICENSE](./LICENSE) file for full details.
-
