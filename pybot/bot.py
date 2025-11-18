@@ -112,18 +112,26 @@ class MyClient(discord.Client):
         Add additional shutdown procedures here in the future.
         """
 
-        print("\033[33mShutting down PyBot...\033[0m\n")
+        print("\033[33mShutting down PyBot...\033[0m")
 
         # cancel running task loops
+        print("Stopping all tasks.")
+
+        task_count = len(self.running_tasks)
+
         for task in self.running_tasks:
             task.cancel()
 
         # wait for cancellation to finish
-        for task in self.running_tasks:
+        for i, task in enumerate(self.running_tasks, 1):
             try:
+                print(f"[{i}/{task_count}] Task cancelled cleanly.")
                 await task
             except asyncio.CancelledError:
+                print(f"[{i}/{task_count}] Task cancelled \033[31m(exception)\033[0m")
                 pass
+
+        print("All tasks stopped.")
 
         # close discord connection
         print("\033[31mPyBot shutdown complete.\033[0m")
@@ -135,7 +143,7 @@ async def main():
     Main async entry point.
     Uses asyncio.run to start the client asynchronously.
     """
-    
+
     print(f"\n\033[33mStarting PyBot...\033[0m")
 
     loop = asyncio.get_running_loop()
