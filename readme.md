@@ -24,6 +24,17 @@ This is a Python-based Discord bot framework that supports:
 
 Python dependencies are installed automatically via Docker.
 
+## Platform Support Notice
+
+This project uses the Docker image `python:3.12-slim`, which is Linux-based. As a result:
+
+- **Windows:** Runs through Docker Desktop using the WSL2 backend (not natively).
+- **Linux:** Runs natively through Docker.
+- **macOS:** Runs through Docker Desktop, which uses an embedded Linux VM.
+
+The bot does **not** run natively on Windows or macOS. It runs on any system that supports Docker’s Linux container environment.
+
+
 ## Building the Bot
 
 ### Windows
