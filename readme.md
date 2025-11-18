@@ -1,4 +1,5 @@
 # Discord PyBot Framework
+Version 2025.11.17-Experimental
 
 This is a Python-based Discord bot framework that supports:
 
