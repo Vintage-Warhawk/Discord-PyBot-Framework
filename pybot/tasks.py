@@ -73,16 +73,16 @@ manager.register_task("daily", "Example Task", DailyTask())
 # Example Task: Test
 # -----------------------------
 # Uncomment to enable a test task that runs every 10 seconds
-# class TestTask:
-#     """
-#     Task that runs every 10 seconds for testing purposes.
-#     """
-#     async def run(self, client):
-#         for guild in client.guilds:
-#             home_channel_id = GetConfig("home_channels", guild_id=guild.id).value()
-#             if home_channel_id:
-#                 channel = guild.get_channel(int(home_channel_id))
-#                 if channel:
-#                     await channel.send("Test task executed!")
+#class TestTask:
+#    """
+#    Task that runs every 10 seconds for testing purposes.
+#    """
+#    async def run(self, client):
+#        for guild in client.guilds:
+#            home_channel_id = GetConfig("home_channels", guild_id=guild.id).value()
+#            if home_channel_id:
+#                channel = guild.get_channel(int(home_channel_id))
+#                if channel:
+#                    await channel.send("Test task executed!")
 #
-# manager.register_task("test", "Example Task", TestTask())
+#manager.register_task("test", "Example Task", TestTask())

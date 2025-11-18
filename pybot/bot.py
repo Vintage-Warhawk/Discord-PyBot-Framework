@@ -65,7 +65,7 @@ class MyClient(discord.Client):
                 )
                 await asyncio.sleep((next_hour - now).total_seconds())
 
-                for name, task in manager.get_tasks("hourly"):
+                for name, task in manager.get_tasks("hourly").items():
                     print(f"\033[36m[Hourly]\033[0m Running task: {name}")
                     await task.run(self)
 
@@ -81,7 +81,7 @@ class MyClient(discord.Client):
 
                 await asyncio.sleep((next_noon - now).total_seconds())
 
-                for name, task in manager.get_tasks("daily"):
+                for name, task in manager.get_tasks("daily").items():
                     print(f"\033[33m[Daily]\033[0m Running task: {name}")
                     await task.run(self)
 
@@ -90,7 +90,7 @@ class MyClient(discord.Client):
         async def test_loop():
             while True:
                 await asyncio.sleep(10)
-                for name, task in manager.get_tasks("test"):
+                for name, task in manager.get_tasks("test").items():
                     print(f"\033[31m[Testing]\033[0m Running task: {name}")
                     await task.run(self)
 

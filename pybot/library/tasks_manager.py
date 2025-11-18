@@ -42,6 +42,6 @@ class TaskManager:
             interval_name (str): The interval name to fetch tasks for.
 
         Returns:
-            list: A list of task instances for the given interval.
+            dict: {task_name: task_instance}
         """
         return self.tasks.get(interval_name, [])
