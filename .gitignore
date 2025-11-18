@@ -4,3 +4,4 @@ pybot/libraries/__pycache__/
 pybot/data/__pycache__/
 *.log
 pybot/data/*
+!pybot/data/.gitkeep
