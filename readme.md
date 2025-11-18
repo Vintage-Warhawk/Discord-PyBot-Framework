@@ -18,10 +18,8 @@ This is a Python-based Discord bot framework that supports:
 
 ## Requirements
 
-- Python 3.12 or higher
 - Docker installed and running on your machine
 - Discord Bot Token
-- Bash support if using `build.sh`
 
 Python dependencies are installed automatically via Docker.
 
@@ -157,5 +155,4 @@ Data is stored in `data.json` and persisted in Docker.
 
 Ensure the bot has message content intent enabled in the Discord Developer Portal.
 Tasks and commands are modular and can be extended by creating new classes and registering them with the manager.
-Review all code changes before committing to the repository.
 
