@@ -44,4 +44,4 @@ class TaskManager:
         Returns:
             dict: {task_name: task_instance}
         """
-        return self.tasks.get(interval_name, [])
+        return self.tasks.get(interval_name, {})
