@@ -76,12 +76,12 @@ This bot can run on any machine with Docker installed.
 
 ## Creating Custom Commands
 
-Commands are defined in `commands.py` or additional files.
+Commands are defined in `pybot/commands.py` or additional files.
 
 ### Example Command
 
 ```
-from hook_manager import HookManager
+from library.hook_manager import HookManager
 
 manager = HookManager()
 
@@ -104,12 +104,12 @@ Example:
 
 ## Creating Custom Tasks
 
-Tasks are defined in `tasks.py` and registered with `tasks_manager.py`.
+Tasks are defined in `pybot/tasks.py` and registered with `library.tasks_manager.py`.
 
 ### Example Task
 
 ```
-from tasks_manager import TaskManager
+from library.tasks_manager import TaskManager
 
 manager = TaskManager()
 
@@ -130,12 +130,12 @@ A `test` task loop can be added to run every 10 seconds for development.
 
 ## Data System / Config
 
-The bot uses a persistent JSON-based config (`data.json`) to store server-specific data.
+The bot uses a persistent JSON-based config (`data/data.json`) to store server-specific data.
 
 ### SetConfig
 
 ```
-from config import SetConfig
+from library.config_manager import SetConfig
 
 SetConfig("home_channels", str(message.channel.id), guild_id=message.guild.id)
 ```
@@ -143,14 +143,14 @@ SetConfig("home_channels", str(message.channel.id), guild_id=message.guild.id)
 ### GetConfig
 
 ```
-from config import GetConfig
+from library.config_manager import GetConfig
 
 home_channel_id = GetConfig("home_channels", guild_id=message.guild.id).value()
 ```
 
 Supports per-guild settings using `guild_id`.
 Can store home channels or other persistent bot settings.
-Data is stored in `data.json` and persisted in Docker.
+Data is stored in `data/data.json` and persisted in Docker.
 
 ## Notes
 
