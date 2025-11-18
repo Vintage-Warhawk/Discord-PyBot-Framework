@@ -135,6 +135,7 @@ async def main():
     Main async entry point.
     Uses asyncio.run to start the client asynchronously.
     """
+    
     print(f"\n\033[33mStarting PyBot...\033[0m")
 
     loop = asyncio.get_running_loop()
