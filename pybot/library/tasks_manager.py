@@ -1,7 +1,7 @@
 """
 File: tasks_manager.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-17
+Last Edit: 2025-11-18
 
 Description:
 This file defines the TaskManager class, which manages scheduled tasks for the
