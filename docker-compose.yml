@@ -30,4 +30,4 @@ services:
       - .:/app
     
     # Default command to run when container starts
-    command: python bot.py
+    command: python -u bot.py

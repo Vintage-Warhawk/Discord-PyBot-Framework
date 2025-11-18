@@ -36,7 +36,7 @@ class MyClient(discord.Client):
         Called when the bot is fully connected and ready.
         Starts all scheduled task loops asynchronously.
         """
-        print(f"Logged in as {self.user}")
+        print(f"Logged in as \033[32m{self.user}\033[0m")
         asyncio.create_task(self.start_scheduled_tasks())
 
     async def on_message(self, message):
