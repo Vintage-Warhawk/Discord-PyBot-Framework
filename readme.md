@@ -94,7 +94,7 @@ Commands are defined in `pybot/commands.py` or additional files.
 ### Example Command
 
 ```
-from library.command_manager import HookManager
+from library.command_manager import CommandManager
 
 manager = CommandManager()
 
