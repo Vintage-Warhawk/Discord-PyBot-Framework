@@ -1,3 +1,5 @@
+<img width="1000" height="380" alt="PyBot_Logo_Dark" src="https://github.com/user-attachments/assets/455baf22-a956-4650-956b-6eb640f7f4ee" />
+
 # Discord PyBot Framework
 Version 2025.11.18-Experimental
 
