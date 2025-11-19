@@ -12,7 +12,7 @@ when the command is invoked.
 
 import datetime
 
-from library.hook_manager import CommandManager
+from library.command_manager import CommandManager
 from library.config_manager import SetConfig
 from library.response_manager import ResponseManager
 
