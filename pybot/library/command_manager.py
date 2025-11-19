@@ -1,15 +1,15 @@
 """
-File: hook_manager.py
+File: command_manager.py
 Maintainer: Vntage Warhawk
-Last Edit: 2025-11-17
+Last Edit: 2025-11-19
 
 Description:
-This file defines the HookManager class, which manages command hooks for the Discord bot.
+This file defines the CommandManager class, which manages command hooks for the Discord bot.
 It allows commands to be registered with triggers (like "!test") and handles incoming
 messages by dispatching them to the appropriate command class.
 """
 
-class HookManager:
+class CommandManager:
 	"""
 	Manages command hooks.
 
@@ -19,11 +19,11 @@ class HookManager:
 
 	def __init__(self):
 		"""
-		Initialize the hook manager with an empty hook dictionary.
+		Initialize the command manager with an empty command dictionary.
 		"""
 		self.hooks = {}
 
-	def register_hook(self, trigger: str, handler):
+	def register_command(self, trigger: str, handler):
 		"""
 		Register a command trigger with a handler class.
 
@@ -35,7 +35,7 @@ class HookManager:
 
 	async def handle_message(self, message):
 		"""
-		Handle incoming Discord messages and dispatch to the registered hook if found.
+		Handle incoming Discord messages and dispatch to the registered command if found.
 
 		Args:
 			message (discord.Message): The message object from the Discord API.

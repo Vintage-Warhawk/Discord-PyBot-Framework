@@ -12,12 +12,12 @@ when the command is invoked.
 
 import datetime
 
-from library.hook_manager import HookManager
+from library.hook_manager import CommandManager
 from library.config_manager import SetConfig
 from library.response_manager import ResponseManager
 
-# Create a HookManager and ReponseManager instance for registering commands
-manager = HookManager()
+# Create a CommandManager and ReponseManager instance for registering commands
+manager = CommandManager()
 response = ResponseManager()
 
 # -----------------------------
@@ -40,7 +40,7 @@ class TestCommand:
 		await message.channel.send(f"{message.author.name} ran !test with args: {args[1:]}")
 
 # Register the !test command with the manager
-manager.register_hook("!test", TestCommand())
+manager.register_command("!test", TestCommand())
 
 # -----------------------------
 # Example Command: !name
@@ -57,7 +57,7 @@ class NameCommand:
 		await message.channel.send(f"{message.author.name} said: {' '.join(args[1:])}")
 
 # Register the !name command
-manager.register_hook("!name", NameCommand())
+manager.register_command("!name", NameCommand())
 
 # -----------------------------
 # Example Command: !home
@@ -82,7 +82,7 @@ class HomeCommand:
 		await message.channel.send(f"This channel is now set as the home channel for this server!")
 
 # Register the !home command
-manager.register_hook("!home", HomeCommand())
+manager.register_command("!home", HomeCommand())
 
 # -----------------------------
 # Example Command: !response
@@ -108,7 +108,7 @@ class ResponseCommand:
 		await message.channel.send(f"{message.author.name} responded: {message.content}")
 
 # Register the !response command
-manager.register_hook("!response", ResponseCommand())
+manager.register_command("!response", ResponseCommand())
 
 # -----------------------------
 # Example Command: !reaction
@@ -135,4 +135,4 @@ class ReactionCommand:
 		await reaction.message.channel.send(f"{user.name} reacted: {reaction.emoji}")
 
 # Register the !response command
-manager.register_hook("!reaction", ReactionCommand())
+manager.register_command("!reaction", ReactionCommand())

@@ -94,15 +94,15 @@ Commands are defined in `pybot/commands.py` or additional files.
 ### Example Command
 
 ```
-from library.hook_manager import HookManager
+from library.command_manager import HookManager
 
-manager = HookManager()
+manager = CommandManager()
 
 class HelloCommand:
     async def run(self, message, args):
         await message.channel.send(f"Hello {message.author.name}!")
 
-manager.register_hook("!hello", HelloCommand())
+manager.register_command("!hello", HelloCommand())
 ```
 
 Trigger: `!hello` — users type this to invoke the command.
