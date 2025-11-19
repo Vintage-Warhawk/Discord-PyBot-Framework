@@ -177,3 +177,5 @@ This project is released under a non-commercial license. You can use, modify, di
 Commercial use or any use intended to generate profit is strictly prohibited.
 
 See the [LICENSE](./LICENSE) file for full details.
+
+<img width="1000" height="380" alt="PyBot_Branding" src="https://github.com/user-attachments/assets/1f931736-679a-40c8-bd48-95b9ea9ca0c0" />
