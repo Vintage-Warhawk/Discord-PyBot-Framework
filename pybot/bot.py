@@ -15,8 +15,10 @@ import discord
 import asyncio
 from datetime import datetime, timedelta
 import pytz
+
 from tasks import manager  # TaskManager instance managing registered tasks
 from commands import manager as command_manager  # CommandManager instance handling command hooks
+from commands import response as response_manager # ResponseManager instance handling response hooks
 
 # Set the timezone for scheduled tasks
 TIMEZONE = pytz.timezone("America/Chicago")
@@ -27,153 +29,201 @@ intents.message_content = True
 
 
 class MyClient(discord.Client):
-    """
-    Custom Discord client class that handles:
-    - Bot readiness
-    - Incoming messages
-    - Scheduled task loops (hourly, daily, test)
-    - Graceful shutdown
-    """
+	"""
+	Custom Discord client class that handles:
+	- Bot readiness
+	- Incoming messages
+	- Scheduled task loops (hourly, daily, test)
+	- Graceful shutdown
+	"""
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.running_tasks = []  # store created tasks for later cancellation
+	def __init__(self, **kwargs):
+		super().__init__(**kwargs)
+		self.running_tasks = []  # store created tasks for later cancellation
 
-    async def on_ready(self):
-        """
-        Called when the bot is fully connected and ready.
-        Starts scheduled task loops.
-        """
-        print(f"Logged in as \033[32m{self.user}\033[0m")
-        self.start_scheduled_tasks()
+	async def on_ready(self):
+		"""
+		Called when the bot is fully connected and ready.
+		Starts scheduled task loops.
+		"""
+		print(f"Logged in as \033[32m{self.user}\033[0m")
+		self.start_scheduled_tasks()
 
-    async def on_message(self, message):
-        """
-        Called when a new message is sent.
-        Ignores other bots. Passes content to the command manager.
-        """
-        if message.author.bot:
-            return
-        await command_manager.handle_message(message)
+	async def on_message(self, message):
+		"""
+		Called when a new message is sent.
+		Ignores other bots. Checks for waiting responses.
+		Passes content to the command manager.
+		"""
+		if message.author.bot:
+			return
 
-    def start_scheduled_tasks(self):
-        """
-        Starts asynchronous loops for hourly, daily, and test tasks.
-        Each loop waits until its next scheduled run time before executing tasks.
-        """
+		# Check message waiters
+		for entry in list(response_manager.awaiting_messages):
+			if entry["channel_id"] != message.channel.id:
+				continue
+			if entry["user_id"] not in (0, message.author.id):
+				continue
 
-        async def hourly_loop():
-            try:
-                while True:
-                    now = datetime.now(TIMEZONE)
-                    next_hour = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
-                    await asyncio.sleep((next_hour - now).total_seconds())
+			# Trigger callback
+			await response_manager.handle_message(message, entry["callback"])
+			response_manager.awaiting_messages.remove(entry)
+			return  # Only one waiter per message
 
-                    for name, task in manager.get_tasks("hourly").items():
-                        print(f"\033[33m[Task]\033[36m [Hourly]\033[0m Running task: {name}")
-                        await task.run(self)
-            except asyncio.CancelledError:
-                return
+		await command_manager.handle_message(message)
 
-        async def daily_loop():
-            try:
-                while True:
-                    now = datetime.now(TIMEZONE)
-                    next_noon = now.replace(hour=12, minute=0, second=0, microsecond=0)
-                    if now >= next_noon:
-                        next_noon += timedelta(days=1)
+	async def on_reaction_add(self, reaction, user):
+		"""
+		Called when a new reaction is added.
+		Ignores other bots. Checks for waiting responses.
+		"""
+		if user.bot:
+			return
 
-                    await asyncio.sleep((next_noon - now).total_seconds())
+		 # Check message waiters
+		for entry in list(response_manager.awaiting_reactions):
+			if entry["message_id"] != reaction.message.id:
+				continue
+			if entry["user_id"] not in (0, user.id):
+				continue
 
-                    for name, task in manager.get_tasks("daily").items():
-                        print(f"\033[33m[Task]\033[35m [Daily]\033[0m Running task: {name}")
-                        await task.run(self)
-            except asyncio.CancelledError:
-                return
+			# Trigger callback
+			await response_manager.handle_reaction(reaction, user, entry["callback"])
+			response_manager.awaiting_reactions.remove(entry)
+			return # Only one waiter per message
 
-        async def test_loop():
-            try:
-                while True:
-                    await asyncio.sleep(10)
-                    for name, task in manager.get_tasks("test").items():
-                        print(f"\033[33m[Task]\033[31m [Testing]\033[0m Running task: {name}")
-                        await task.run(self)
-            except asyncio.CancelledError:
-                return
+	def start_scheduled_tasks(self):
+		"""
+		Starts asynchronous loops for hourly, daily, and test tasks.
+		Each loop waits until its next scheduled run time before executing tasks.
+		"""
 
-        # create & store the tasks
-        self.running_tasks.append(asyncio.create_task(hourly_loop()))
-        self.running_tasks.append(asyncio.create_task(daily_loop()))
-        self.running_tasks.append(asyncio.create_task(test_loop()))
+		async def hourly_loop():
+			try:
+				while True:
+					now = datetime.now(TIMEZONE)
+					next_hour = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+					await asyncio.sleep((next_hour - now).total_seconds())
 
-    async def shutdown(self):
-        """
-        Cancels scheduled tasks and cleanly shuts down Discord client.
-        Add additional shutdown procedures here in the future.
-        """
+					for name, task in manager.get_tasks("hourly").items():
+						print(f"\033[33m[Task]\033[36m [Hourly]\033[0m Running task: {name}")
+						await task.run(self)
+			except asyncio.CancelledError:
+				print("[1/4] Task cancelled cleanly. (Hourly)")
+				return
 
-        print("\033[33mShutting down PyBot...\033[0m")
+		async def daily_loop():
+			try:
+				while True:
+					now = datetime.now(TIMEZONE)
+					next_noon = now.replace(hour=12, minute=0, second=0, microsecond=0)
+					if now >= next_noon:
+						next_noon += timedelta(days=1)
 
-        # cancel running task loops
-        print("Stopping all tasks.")
+					await asyncio.sleep((next_noon - now).total_seconds())
 
-        task_count = len(self.running_tasks)
+					for name, task in manager.get_tasks("daily").items():
+						print(f"\033[33m[Task]\033[35m [Daily]\033[0m Running task: {name}")
+						await task.run(self)
+			except asyncio.CancelledError:
+				print("[2/4] Task cancelled cleanly. (Daily)")
+				return
 
-        for task in self.running_tasks:
-            task.cancel()
+		async def test_loop():
+			try:
+				while True:
+					await asyncio.sleep(10)
+					for name, task in manager.get_tasks("test").items():
+						print(f"\033[33m[Task]\033[31m [Testing]\033[0m Running task: {name}")
+						await task.run(self)
+			except asyncio.CancelledError:
+				print("[3/4] Task cancelled cleanly. (Test)")
+				return
 
-        # wait for cancellation to finish
-        for i, task in enumerate(self.running_tasks, 1):
-            try:
-                print(f"[{i}/{task_count}] Task cancelled cleanly.")
-                await task
-            except asyncio.CancelledError:
-                print(f"[{i}/{task_count}] Task cancelled \033[31m(exception)\033[0m")
-                pass
+		async def response_cleanup():
+			try:
+				while True:
+					await asyncio.sleep(15)
+					response_manager.check_timeouts(self)
+					
+			except asyncio.CancelledError:
+				print("[3/4] Task cancelled cleanly. (Cleanup)")
+				return      
 
-        print("All tasks stopped.")
+		# create & store the tasks
+		self.running_tasks.append(asyncio.create_task(hourly_loop()))
+		self.running_tasks.append(asyncio.create_task(daily_loop()))
+		self.running_tasks.append(asyncio.create_task(test_loop()))
+		self.running_tasks.append(asyncio.create_task(response_cleanup()))
 
-        # close discord connection
-        print("\033[31mPyBot shutdown complete.\033[0m")
-        await self.close()
+	async def shutdown(self):
+		"""
+		Cancels scheduled tasks and cleanly shuts down Discord client.
+		Add additional shutdown procedures here in the future.
+		"""
+
+		print("\033[33mShutting down PyBot...\033[0m")
+
+		# cancel running task loops
+		print("Stopping all tasks.")
+
+		task_count = len(self.running_tasks)
+
+		for task in self.running_tasks:
+			task.cancel()
+
+		# wait for cancellation to finish
+		for i, task in enumerate(self.running_tasks, 1):
+			try:
+				await task
+			except asyncio.CancelledError:
+				print(f"[{i}/{task_count}] Task cancelled \033[31m(CancelledError)\033[0m")
+			except Exception as e:
+				print(f"[{i}/{task_count}] Task raised exception \033[31m{e}\033[0m")  # Log but continue
+
+		print("All tasks stopped.")
+
+		# close discord connection
+		print("\033[31mPyBot shutdown complete.\033[0m")
+		await self.close()
 
 
 async def main():
-    """
-    Main async entry point.
-    Uses asyncio.run to start the client asynchronously.
-    """
+	"""
+	Main async entry point.
+	Uses asyncio.run to start the client asynchronously.
+	"""
 
-    print(f"\n\033[33mStarting PyBot...\033[0m")
+	print(f"\n\033[33mStarting PyBot...\033[0m")
 
-    loop = asyncio.get_running_loop()
-    client = MyClient(intents=intents)
+	loop = asyncio.get_running_loop()
+	client = MyClient(intents=intents)
 
-    stop_event = asyncio.Event()
+	stop_event = asyncio.Event()
 
-    # signal handler
-    def handle_sigterm():
-        stop_event.set()
+	# signal handler
+	def handle_sigterm():
+		stop_event.set()
 
-    loop.add_signal_handler(signal.SIGTERM, handle_sigterm)
-    loop.add_signal_handler(signal.SIGINT, handle_sigterm)
+	loop.add_signal_handler(signal.SIGTERM, handle_sigterm)
+	loop.add_signal_handler(signal.SIGINT, handle_sigterm)
 
-    # start bot
-    client_task = asyncio.create_task(client.start(os.getenv("DISCORD_TOKEN")))
+	# start bot
+	client_task = asyncio.create_task(client.start(os.getenv("DISCORD_TOKEN")))
 
-    # wait until SIGTERM/SIGINT
-    await stop_event.wait()
+	# wait until SIGTERM/SIGINT
+	await stop_event.wait()
 
-    # shutdown sequence
-    await client.shutdown()
+	# shutdown sequence
+	await client.shutdown()
 
-    # ensure discord.py task ends
-    client_task.cancel()
-    try:
-        await client_task
-    except asyncio.CancelledError:
-        pass
+	# ensure discord.py task ends
+	client_task.cancel()
+	try:
+		await client_task
+	except asyncio.CancelledError:
+		pass
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+	asyncio.run(main())

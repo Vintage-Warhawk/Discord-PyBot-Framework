@@ -21,24 +21,24 @@ manager = TaskManager()
 # Example Task: Hourly
 # -----------------------------
 class HourlyTask:
-    """
-    Task that runs every hour.
-    Sends a message to the configured home channel for each guild.
-    """
+	"""
+	Task that runs every hour.
+	Sends a message to the configured home channel for each guild.
+	"""
 
-    async def run(self, client):
-        """
-        Executes the hourly task for all guilds the bot is in.
+	async def run(self, client):
+		"""
+		Executes the hourly task for all guilds the bot is in.
 
-        Args:
-            client (discord.Client): The bot instance, used to access guilds and channels.
-        """
-        for guild in client.guilds:
-            home_channel_id = GetConfig("home_channels", guild_id=guild.id).value()
-            if home_channel_id:
-                channel = guild.get_channel(int(home_channel_id))
-                if channel:
-                    await channel.send("Hourly task executed!")
+		Args:
+			client (discord.Client): The bot instance, used to access guilds and channels.
+		"""
+		for guild in client.guilds:
+			home_channel_id = GetConfig("home_channels", guild_id=guild.id).value()
+			if home_channel_id:
+				channel = guild.get_channel(int(home_channel_id))
+				if channel:
+					await channel.send("Hourly task executed!")
 
 # Register the hourly task
 manager.register_task("hourly", "Example Task", HourlyTask())
@@ -47,24 +47,24 @@ manager.register_task("hourly", "Example Task", HourlyTask())
 # Example Task: Daily
 # -----------------------------
 class DailyTask:
-    """
-    Task that runs daily (e.g., at noon).
-    Sends a message to the configured home channel for each guild.
-    """
+	"""
+	Task that runs daily (e.g., at noon).
+	Sends a message to the configured home channel for each guild.
+	"""
 
-    async def run(self, client):
-        """
-        Executes the daily task for all guilds the bot is in.
+	async def run(self, client):
+		"""
+		Executes the daily task for all guilds the bot is in.
 
-        Args:
-            client (discord.Client): The bot instance, used to access guilds and channels.
-        """
-        for guild in client.guilds:
-            home_channel_id = GetConfig("home_channels", guild_id=guild.id).value()
-            if home_channel_id:
-                channel = guild.get_channel(int(home_channel_id))
-                if channel:
-                    await channel.send("Daily task executed!")
+		Args:
+			client (discord.Client): The bot instance, used to access guilds and channels.
+		"""
+		for guild in client.guilds:
+			home_channel_id = GetConfig("home_channels", guild_id=guild.id).value()
+			if home_channel_id:
+				channel = guild.get_channel(int(home_channel_id))
+				if channel:
+					await channel.send("Daily task executed!")
 
 # Register the daily task
 manager.register_task("daily", "Example Task", DailyTask())
