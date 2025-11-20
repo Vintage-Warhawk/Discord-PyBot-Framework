@@ -1,7 +1,7 @@
 """
 File: response_manager.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-18
+Last Edit: 2025-11-20
 
 Description:
 Manages all pending awaited responses for the Discord bot framework. This
@@ -169,6 +169,7 @@ class ResponseManager:
 			if now >= entry["timeout_datetime"]:
 				channel = client.get_channel(entry["channel_id"])
 				if channel:
+					print(f"\033[33m[Cleanup]\033[36m [Response]\033[0m {entry["timeout_message"]}")
 					asyncio.create_task(channel.send(entry["timeout_message"]))
 			else:
 				active.append(entry)

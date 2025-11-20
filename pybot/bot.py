@@ -1,7 +1,7 @@
 """
 File: bot.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-18
+Last Edit: 2025-11-20
 
 Description:
 This is the main entry point for the Discord bot framework. It sets up the Discord client,
@@ -96,6 +96,9 @@ class MyClient(discord.Client):
 		"""
 		Starts asynchronous loops for hourly, daily, and test tasks.
 		Each loop waits until its next scheduled run time before executing tasks.
+
+		- Notes
+			Change to a dynamic loop hook system in future.
 		"""
 
 		async def hourly_loop():
@@ -109,7 +112,7 @@ class MyClient(discord.Client):
 						print(f"\033[33m[Task]\033[36m [Hourly]\033[0m Running task: {name}")
 						await task.run(self)
 			except asyncio.CancelledError:
-				print("[1/4] Task cancelled cleanly. (Hourly)")
+				print("[-   ] Task cancelled cleanly. (Hourly)")
 				return
 
 		async def daily_loop():
@@ -126,7 +129,7 @@ class MyClient(discord.Client):
 						print(f"\033[33m[Task]\033[35m [Daily]\033[0m Running task: {name}")
 						await task.run(self)
 			except asyncio.CancelledError:
-				print("[2/4] Task cancelled cleanly. (Daily)")
+				print("[--  ] Task cancelled cleanly. (Daily)")
 				return
 
 		async def test_loop():
@@ -137,9 +140,10 @@ class MyClient(discord.Client):
 						print(f"\033[33m[Task]\033[31m [Testing]\033[0m Running task: {name}")
 						await task.run(self)
 			except asyncio.CancelledError:
-				print("[3/4] Task cancelled cleanly. (Test)")
+				print("[--- ] Task cancelled cleanly. (Test)")
 				return
 
+		# Loop to clean up responses that have hit their timeout limit. (15 second accuracy)
 		async def response_cleanup():
 			try:
 				while True:
@@ -147,7 +151,23 @@ class MyClient(discord.Client):
 					response_manager.check_timeouts(self)
 					
 			except asyncio.CancelledError:
-				print("[3/4] Task cancelled cleanly. (Cleanup)")
+				# Cleanup pending response requests, and send time out message
+
+				# Time out all pending message responses.
+				for entry in response_manager.awaiting_messages:
+					channel = self.get_channel(entry["channel_id"])
+					if channel:
+						print(f"[--- ] \033[31m[Shutdown]\033[36m [Response]\033[0m {entry["timeout_message"]}")
+						await channel.send(entry["timeout_message"])
+
+				# Time out all pending reaction responses.
+				for entry in response_manager.awaiting_reactions:
+					channel = self.get_channel(entry["channel_id"])
+					if channel:
+						print(f"[--- ] \033[31m[Shutdown]\033[36m [Response]\033[0m {entry["timeout_message"]}")
+						await channel.send(entry["timeout_message"])
+
+				print("[----] Task cancelled cleanly. (Cleanup)")
 				return      
 
 		# create & store the tasks
@@ -177,9 +197,9 @@ class MyClient(discord.Client):
 			try:
 				await task
 			except asyncio.CancelledError:
-				print(f"[{i}/{task_count}] Task cancelled \033[31m(CancelledError)\033[0m")
+				print(f"[{'-' * i}{' ' * (task_count - i)}] Task cancelled \033[31m(CancelledError)\033[0m")
 			except Exception as e:
-				print(f"[{i}/{task_count}] Task raised exception \033[31m{e}\033[0m")  # Log but continue
+				print(f"[{'-' * i}{' ' * (task_count - i)}] Task raised exception \033[31m{e}\033[0m")  # Log but continue
 
 		print("All tasks stopped.")
 
