@@ -14,6 +14,7 @@ import datetime
 
 from library.command_manager import CommandManager
 from library.config_manager import SetConfig
+from library.config_manager import GetConfig
 from library.response_manager import ResponseManager
 
 # Create a CommandManager and ReponseManager instance for registering commands
@@ -79,10 +80,33 @@ class HomeCommand:
 		# Store the channel ID for this guild in the config system
 		SetConfig("home_channels", str(message.channel.id), guild_id=message.guild.id)
 		print(f"\033[33m[Config]\033[0m new home directory set: \033[33m{message.channel.name} ({message.channel.id})\033[0m")
-		await message.channel.send(f"This channel is now set as the home channel for this server!")
+		await message.channel.send("This channel is now set as the home channel for this server!")
 
 # Register the !home command
 manager.register_command("!home", HomeCommand())
+
+# -----------------------------
+# Example Command: !announcement
+# -----------------------------
+class AccouncementCommand:
+	async def run(self, message, args):
+		if not message.author.guild_permissions.administrator:
+			await message.channel.send("Only admins can set the home channel.")
+			return
+
+		home_channel_id = GetConfig("home_channels", guild_id=message.guild.id).value()
+
+		if home_channel_id:
+			channel = message.guild.get_channel(int(home_channel_id))
+			if channel:
+				await channel.send(message.content.replace("!announcement", "", 1))
+			else:
+				await message.channel.send("Home channel could not be found.")
+		else:
+			await message.channel.send("No home channel set. use !home to set the current channel as home.")
+
+# Register the !home command
+manager.register_command("!announcement", AccouncementCommand())
 
 # -----------------------------
 # Example Command: !response
