@@ -1,12 +1,7 @@
 """
 File: tasks_manager.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-18
-
-Description:
-This file defines the TaskManager class, which manages scheduled tasks for the
-Discord bot framework. Tasks are grouped by interval names (e.g., "hourly", "daily", "test").
-The manager allows registration of task classes and retrieval of tasks for execution.
+Last Edit: 2025-11-21
 """
 
 class TaskManager:
@@ -21,7 +16,7 @@ class TaskManager:
 		"""
 		Initialize the TaskManager with an empty task dictionary.
 		"""
-		self.tasks = {}  # {"hourly": [...], "daily": [...]}
+		self.tasks = {}
 
 	def register_task(self, interval_name: str, name: str, task):
 		"""

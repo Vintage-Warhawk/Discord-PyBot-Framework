@@ -1,7 +1,7 @@
 """
 File: bot.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-20
+Last Edit: 2025-11-21
 
 Description:
 This is the main entry point for the Discord bot framework. It sets up the Discord client,
@@ -16,7 +16,8 @@ import asyncio
 from datetime import datetime, timedelta
 import pytz
 
-from tasks import manager  # TaskManager instance managing registered tasks
+from schedules import manager as schedule_manager # ScheduleManager instance managing registered schedules
+from tasks import manager as task_manager  # TaskManager instance managing registered tasks
 from commands import manager as command_manager  # CommandManager instance handling command hooks
 from commands import response as response_manager # ResponseManager instance handling response hooks
 
@@ -94,54 +95,24 @@ class MyClient(discord.Client):
 
 	def start_scheduled_tasks(self):
 		"""
-		Starts asynchronous loops for hourly, daily, and test tasks.
+		Starts asynchronous loops for schedules.
 		Each loop waits until its next scheduled run time before executing tasks.
-
-		- Notes
-			Change to a dynamic loop hook system in future.
 		"""
 
-		async def hourly_loop():
+		async def schedule_loop(interval_name, schedule):
 			try:
 				while True:
-					now = datetime.now(TIMEZONE)
-					next_hour = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
-					await asyncio.sleep((next_hour - now).total_seconds())
-
-					for name, task in manager.get_tasks("hourly").items():
-						print(f"\033[33m[Task]\033[36m [Hourly]\033[0m Running task: {name}")
-						await task.run(self)
+					seconds = await schedule.get(self)
+					await asyncio.sleep(seconds)
+					for name, task in task_manager.get_tasks(interval_name).items():
+						print(f"\033[33m[Task]\033[36m [{interval_name}]\033[0m Running task: {name}")
+						asyncio.create_task(task.run(self))
 			except asyncio.CancelledError:
-				print("[-   ] Task cancelled cleanly. (Hourly)")
 				return
 
-		async def daily_loop():
-			try:
-				while True:
-					now = datetime.now(TIMEZONE)
-					next_noon = now.replace(hour=12, minute=0, second=0, microsecond=0)
-					if now >= next_noon:
-						next_noon += timedelta(days=1)
+		for name, schedule in schedule_manager.schedules.items():
+			self.running_tasks.append(asyncio.create_task(schedule_loop( name, schedule )))
 
-					await asyncio.sleep((next_noon - now).total_seconds())
-
-					for name, task in manager.get_tasks("daily").items():
-						print(f"\033[33m[Task]\033[35m [Daily]\033[0m Running task: {name}")
-						await task.run(self)
-			except asyncio.CancelledError:
-				print("[--  ] Task cancelled cleanly. (Daily)")
-				return
-
-		async def test_loop():
-			try:
-				while True:
-					await asyncio.sleep(10)
-					for name, task in manager.get_tasks("test").items():
-						print(f"\033[33m[Task]\033[31m [Testing]\033[0m Running task: {name}")
-						await task.run(self)
-			except asyncio.CancelledError:
-				print("[--- ] Task cancelled cleanly. (Test)")
-				return
 
 		# Loop to clean up responses that have hit their timeout limit. (15 second accuracy)
 		async def response_cleanup():
@@ -167,13 +138,9 @@ class MyClient(discord.Client):
 						print(f"[--- ] \033[31m[Shutdown]\033[36m [Response]\033[0m {entry["timeout_message"]}")
 						await channel.send(entry["timeout_message"])
 
-				print("[----] Task cancelled cleanly. (Cleanup)")
-				return      
+				return
 
-		# create & store the tasks
-		self.running_tasks.append(asyncio.create_task(hourly_loop()))
-		self.running_tasks.append(asyncio.create_task(daily_loop()))
-		self.running_tasks.append(asyncio.create_task(test_loop()))
+		# create & store the cleanup task
 		self.running_tasks.append(asyncio.create_task(response_cleanup()))
 
 	async def shutdown(self):
@@ -196,6 +163,7 @@ class MyClient(discord.Client):
 		for i, task in enumerate(self.running_tasks, 1):
 			try:
 				await task
+				print(f"[{'-' * i}{' ' * (task_count - i)}] Task cancelled cleanly.\033[0m")
 			except asyncio.CancelledError:
 				print(f"[{'-' * i}{' ' * (task_count - i)}] Task cancelled \033[31m(CancelledError)\033[0m")
 			except Exception as e:

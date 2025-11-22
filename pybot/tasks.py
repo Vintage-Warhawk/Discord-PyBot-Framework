@@ -1,21 +1,40 @@
 """
 File: tasks.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-18
-
-Description:
-This file defines task classes for the Discord bot framework.
-Tasks are scheduled operations that run on a defined interval (hourly, daily, test).
-Each task class must implement an async `run(client)` method, where `client` is the
-Discord client instance. Tasks can access guild-specific configuration to send messages
-to designated channels.
+Last Edit: 2025-11-21
 """
 
-from library.tasks_manager import TaskManager
+from library.task_manager import TaskManager
 from library.config_manager import GetConfig
 
 # Create a TaskManager instance to register tasks
 manager = TaskManager()
+
+# -----------------------------
+# Example Task: Minutely
+# -----------------------------
+class MinutelyTask:
+	"""
+	Task that runs every minute.
+	Sends a message to the configured home channel for each guild.
+	"""
+
+	async def run(self, client):
+		"""
+		Executes the minutely task for all guilds the bot is in.
+
+		Args:
+			client (discord.Client): The bot instance, used to access guilds and channels.
+		"""
+		for guild in client.guilds:
+			home_channel_id = GetConfig("home_channels", guild_id=guild.id).value()
+			if home_channel_id:
+				channel = guild.get_channel(int(home_channel_id))
+				if channel:
+					await channel.send("Minutely task executed!")
+
+# Register the hourly task
+manager.register_task("minutely", "Example Task", MinutelyTask())
 
 # -----------------------------
 # Example Task: Hourly
@@ -66,8 +85,8 @@ class DailyTask:
 				if channel:
 					await channel.send("Daily task executed!")
 
-# Register the daily task
-manager.register_task("daily", "Example Task", DailyTask())
+# Register the noon task
+manager.register_task("noon", "Example Task", DailyTask())
 
 # -----------------------------
 # Example Task: Test

@@ -1,7 +1,7 @@
 <img width="1000" height="380" alt="PyBot_Logo_Dark" src="https://github.com/user-attachments/assets/ffd0e198-0554-4867-a59d-bf9d94c990ab" />
 
 # Discord PyBot Framework
-Version 2025.11.20-Experimental
+Version 2025.11.21-Experimental
 
 This is a Python-based Discord bot framework that supports:
 
@@ -16,8 +16,9 @@ This is a Python-based Discord bot framework that supports:
 2. Building the Bot
 3. Running the Bot
 4. Creating Custom Commands
-5. Creating Custom Tasks
-6. Data System / Config
+5. Creating Custom Schedules
+6. Creating Custom Tasks
+7. Data System / Config
 
 ## Requirements
 
@@ -115,31 +116,44 @@ Example:
 # args = ["arg1", "arg2"]
 ```
 
+## Creating Custom Schedules
+
+Schedules are defined in `pybot/schedules.py` and registered with `library.schedules_manager.py`.
+
+### Example Schedule
+
+```
+class ExampleSchedule:
+    async def get(self, client):
+        seconds = 10
+        return seconds
+
+manager.register_schedule("Schedule_Name", ExampleSchedule())
+```
+
+This example schedule will run every 10 seconds.
+
 ## Creating Custom Tasks
 
-Tasks are defined in `pybot/tasks.py` and registered with `library.tasks_manager.py`.
+Tasks are defined in `pybot/tasks.py` and registered with `library.task_manager.py`.
 
 ### Example Task
 
 ```
-from library.tasks_manager import TaskManager
+from library.task_manager import TaskManager
 
 manager = TaskManager()
 
-class HourlyTask:
+class ExampleTask:
     async def run(self, client):
         for guild in client.guilds:
             channel = guild.text_channels[0]
-            await channel.send("Hourly task executed!")
+            await channel.send("Example task executed!")
 
-manager.register_task("hourly", "Task_Name", HourlyTask())
+manager.register_task("Schedule_Name", "Task_Name", ExampleTask())
 ```
 
-Supported intervals: `hourly` and `daily`.
-The bot runs tasks automatically on the schedule:
-Hourly: every full hour.
-Daily: at 12:00 noon (timezone-aware).
-A `test` task loop can be added to run every 10 seconds for development.
+The bot runs tasks automatically on the schedule.
 
 ## Data System / Config
 

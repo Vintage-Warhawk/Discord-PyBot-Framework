@@ -1,15 +1,7 @@
 """
 File: response_manager.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-20
-
-Description:
-Manages all pending awaited responses for the Discord bot framework. This
-includes awaited messages and awaited reactions, each stored with timeout
-rules and callback handlers. The ResponseManager dispatches incoming message
-and reaction events to handler classes via standardized on_response() and
-on_reaction() methods. It also processes expired waits and sends timeout
-notifications to the appropriate channels.
+Last Edit: 2025-11-21
 """
 
 import datetime
