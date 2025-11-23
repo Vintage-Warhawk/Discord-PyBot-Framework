@@ -1,7 +1,7 @@
 """
 File: config.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-17
+Last Edit: 2025-11-23
 
 Description:
 This file provides a simple JSON-based configuration system for the Discord bot.
@@ -11,6 +11,10 @@ Includes GetConfig and SetConfig classes for reading and writing configuration e
 
 import json
 import os
+
+from threading import Lock
+_write_lock = Lock()
+
 
 # The JSON file that stores all persistent configuration data
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -41,8 +45,11 @@ class Config:
 		"""
 		Saves the provided dictionary to the config file with formatting.
 		"""
-		with open(CONFIG_FILE, "w") as f:
-			json.dump(data, f, indent=4)
+		with _write_lock:
+			tmp = CONFIG_FILE + ".tmp"
+			with open(tmp, "w") as f:
+				json.dump(data, f, indent=4)
+			os.replace(tmp, CONFIG_FILE)
 
 # -----------------------------
 # Read configuration values
@@ -71,6 +78,16 @@ class GetConfig(Config):
 		if self.guild_id:
 			return data.get(self.key, {}).get(self.guild_id)
 		return data.get(self.key)
+
+	def all(self):
+		"""
+		Returns a dict of all guild values for the key.
+		Example return:
+			{ "123": 1111111111, "456": 2222222222 }
+		"""
+		data = self._load()
+		value = data.get(self.key, {})
+		return value if isinstance(value, dict) else {}
 
 # -----------------------------
 # Write configuration values

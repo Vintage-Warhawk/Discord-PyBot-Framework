@@ -1,7 +1,7 @@
 """
 File: bot.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-21
+Last Edit: 2025-11-23
 
 Description:
 This is the main entry point for the Discord bot framework. It sets up the Discord client,
@@ -27,7 +27,9 @@ TIMEZONE = pytz.timezone("America/Chicago")
 # Discord client intents configuration
 intents = discord.Intents.default()
 intents.message_content = True
-
+intents.messages = True
+intents.reactions = True
+intents.guilds = True
 
 class MyClient(discord.Client):
 	"""
@@ -67,7 +69,7 @@ class MyClient(discord.Client):
 				continue
 
 			# Trigger callback
-			await response_manager.handle_message(message, entry["callback"])
+			await response_manager.handle_message(self, message, entry["command"])
 			response_manager.awaiting_messages.remove(entry)
 			return  # Only one waiter per message
 
@@ -89,8 +91,32 @@ class MyClient(discord.Client):
 				continue
 
 			# Trigger callback
-			await response_manager.handle_reaction(reaction, user, entry["callback"])
+			await response_manager.handle_reaction(self, reaction, user, entry["command"])
 			response_manager.awaiting_reactions.remove(entry)
+			return # Only one waiter per message
+
+	async def on_raw_reaction_add(self, payload):
+		"""
+		Called when a new reaction is added on any message.
+		Ignores other bots. Checks for waiting responses.
+		"""
+
+		message = await self.get_channel(payload.channel_id).fetch_message(payload.message_id)
+		reaction = discord.utils.get(message.reactions, emoji=payload.emoji.name)
+
+		user = payload.member
+
+		if user.bot:
+			return
+
+		for entry in list(response_manager.static_reactions):
+			if entry["channel_id"] != message.channel.id:
+				continue
+			if entry["user_id"] not in (0, message.author.id):
+				continue
+
+			# Trigger callback
+			await response_manager.handle_reaction(self, reaction, user, entry["command"])
 			return # Only one waiter per message
 
 	def start_scheduled_tasks(self):

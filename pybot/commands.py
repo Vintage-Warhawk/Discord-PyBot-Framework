@@ -1,7 +1,7 @@
 """
 File: commands.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-17
+Last Edit: 2025-11-23
 
 Description:
 This file contains all custom command classes for the Discord bot framework.
@@ -20,6 +20,7 @@ from library.response_manager import ResponseManager
 # Create a CommandManager and ReponseManager instance for registering commands
 manager = CommandManager()
 response = ResponseManager()
+response.set_command_manager(manager)
 
 # -----------------------------
 # Example Command: !test
@@ -123,12 +124,12 @@ class ResponseCommand:
 			user_id=message.author.id,
 			timeout_message="Timed out.",
 			timeout_datetime=timeout_at,
-			callback=self
+			command=args[0]
 		)
 
 		await message.channel.send("Waiting for your response...")
 
-	async def on_response(self, message):
+	async def on_response(self, client, message):
 		await message.channel.send(f"{message.author.name} responded: {message.content}")
 
 # Register the !response command
@@ -152,11 +153,39 @@ class ReactionCommand:
 			user_id=message.author.id,
 			timeout_message="Timed out.",
 			timeout_datetime=timeout_at,
-			callback=self
+			command=args[0]
 		)
 
-	async def on_reaction(self, reaction, user):
+	async def on_reaction(self, client, reaction, user):
 		await reaction.message.channel.send(f"{user.name} reacted: {reaction.emoji}")
 
 # Register the !response command
 manager.register_command("!reaction", ReactionCommand())
+
+# -----------------------------
+# Example Command: !react
+# -----------------------------
+class ReactCommand:
+
+	async def run(self, message, args):
+
+		# Adds response to the manager to await a user reaction.
+		timeout_at = datetime.datetime.utcnow() + datetime.timedelta(days=36500)
+
+		confirm = await message.channel.send("React to this message!")
+
+		response.static_reaction(
+			message_id=confirm.id,
+			guild_id=message.guild.id,
+			channel_id=message.channel.id,
+			user_id=0,
+			timeout_message="Timed out.",
+			timeout_datetime=timeout_at,
+			command=args[0]
+		)
+
+	async def on_reaction(self, client, reaction, user):
+		await reaction.message.channel.send(f"{user.name} reacted: {reaction.emoji}")
+
+# Register the !response command
+manager.register_command("!react", ReactCommand())

@@ -34,7 +34,7 @@ class MinutelyTask:
 					await channel.send("Minutely task executed!")
 
 # Register the hourly task
-manager.register_task("minutely", "Example Task", MinutelyTask())
+#manager.register_task("minutely", "Example Task", MinutelyTask()) #Removed to prevent initial spam
 
 # -----------------------------
 # Example Task: Hourly
