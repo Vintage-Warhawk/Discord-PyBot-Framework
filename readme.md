@@ -1,7 +1,7 @@
 <img width="1000" height="380" alt="PyBot_Logo_Dark" src="https://github.com/user-attachments/assets/ffd0e198-0554-4867-a59d-bf9d94c990ab" />
 
 # Discord PyBot Framework
-Version 2025.11.23-Experimental
+Version 2025.11.24-Experimental
 
 This is a Python-based Discord bot framework that supports:
 

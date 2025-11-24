@@ -1,7 +1,7 @@
 """
 File: response_manager.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-23
+Last Edit: 2025-11-24
 """
 
 import datetime
@@ -104,10 +104,32 @@ class ResponseManager:
 			return
 
 		try:
-			print(f"\033[33m[Response]\033[32m [{user.name}]\033[0m Reacted: \033[33m{reaction.emoji}\033[0m")
+			print(f"\033[33m[Response]\033[32m [{user.name}]\033[0m Reacted: \033[33m{reaction.emoji} \033[34m({reaction.message.id}) \033[0m")
 			await callback.on_reaction(client, reaction, user)
 		except Exception as e:
 			print(f"[ResponseManager] Error in reaction callback: {e}")
+
+	async def handle_reaction_remove(self, client, reaction, user, command):
+		"""
+		Dispatch an incoming reaction removal event to the command class's on_reaction_remove() method.
+
+		Args:
+			reaction (discord.Reaction)
+			user (discord.User)
+			command: Command to grab the callback from.
+		"""
+
+		callback = self.command_manager.hooks.get(command.lower())
+
+		if not hasattr(callback, "on_reaction_remove"):
+			print("[ResponseManager] Callback missing on_reaction_remove()")
+			return
+
+		try:
+			print(f"\033[33m[Response]\033[32m [{user.name}]\033[0m Unreacted: \033[33m{reaction.emoji} \033[34m({reaction.message.id}) \033[0m")
+			await callback.on_reaction_remove(client, reaction, user)
+		except Exception as e:
+			print(f"[ResponseManager] Error in reaction remove callback: {e}")
 
 	# ======================================================================
 	#  Registration of Awaited Responses
@@ -181,8 +203,6 @@ class ResponseManager:
 
 		self.static_reactions.append(reaction)
 
-		print(self.static_reactions)
-
 		guild_reactions = GetConfig("response_reactions", guild_id=guild_id).value()
 		if guild_reactions is None:
 			guild_reactions = []
@@ -217,8 +237,8 @@ class ResponseManager:
 		# ------------------------------
 		active = []
 		for entry in self.awaiting_messages:
-			entry["timeout_datetime"] = datetime.datetime.fromisoformat(entry["timeout_datetime"])
-			if now >= entry["timeout_datetime"]:
+			timeout_datetime = datetime.datetime.fromisoformat(entry["timeout_datetime"])
+			if now >= timeout_datetime:
 				channel = client.get_channel(entry["channel_id"])
 				if channel:
 					print(f"\033[33m[Cleanup]\033[36m [Response]\033[0m {entry["timeout_message"]}")
@@ -233,8 +253,8 @@ class ResponseManager:
 		# ------------------------------
 		active = []
 		for entry in self.awaiting_reactions:
-			entry["timeout_datetime"] = datetime.datetime.fromisoformat(entry["timeout_datetime"])
-			if now >= entry["timeout_datetime"]:
+			timeout_datetime = datetime.datetime.fromisoformat(entry["timeout_datetime"])
+			if now >= timeout_datetime:
 				channel = client.get_channel(entry["channel_id"])
 				if channel:
 					print(f"\033[33m[Cleanup]\033[36m [Response]\033[0m {entry["timeout_message"]}")
@@ -249,9 +269,8 @@ class ResponseManager:
 		# ------------------------------
 		active = []
 		for entry in self.static_reactions:
-			print(type(entry["timeout_datetime"]))
-			entry["timeout_datetime"] = datetime.datetime.fromisoformat(entry["timeout_datetime"])
-			if now >= entry["timeout_datetime"]:
+			timeout_datetime = datetime.datetime.fromisoformat(entry["timeout_datetime"])
+			if now >= timeout_datetime:
 				reactions = GetConfig("response_reactions", guild_id=entry["guild_id"]).value()
 				if reactions is None:
 					reactions = []

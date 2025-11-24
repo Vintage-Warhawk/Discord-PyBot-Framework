@@ -1,7 +1,7 @@
 """
 File: command_manager.py
 Maintainer: Vntage Warhawk
-Last Edit: 2025-11-19
+Last Edit: 2025-11-24
 
 Description:
 This file defines the CommandManager class, which manages command hooks for the Discord bot.
@@ -22,8 +22,9 @@ class CommandManager:
 		Initialize the command manager with an empty command dictionary.
 		"""
 		self.hooks = {}
+		self.helps = {}
 
-	def register_command(self, trigger: str, handler):
+	def register_command(self, trigger: str, handler, desc: str):
 		"""
 		Register a command trigger with a handler class.
 
@@ -32,6 +33,11 @@ class CommandManager:
 			handler: An instance of a class implementing an async `run(message, args)` method.
 		"""
 		self.hooks[trigger.lower()] = handler
+
+		if desc:
+			self.helps[trigger.lower()] = desc
+
+
 
 	async def handle_message(self, message):
 		"""

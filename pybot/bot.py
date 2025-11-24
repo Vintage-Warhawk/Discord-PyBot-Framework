@@ -1,7 +1,7 @@
 """
 File: bot.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-23
+Last Edit: 2025-11-24
 
 Description:
 This is the main entry point for the Discord bot framework. It sets up the Discord client,
@@ -102,7 +102,7 @@ class MyClient(discord.Client):
 		"""
 
 		message = await self.get_channel(payload.channel_id).fetch_message(payload.message_id)
-		reaction = discord.utils.get(message.reactions, emoji=payload.emoji.name)
+		reaction = discord.utils.get(message.reactions, emoji=payload.emoji.name, message=message)
 
 		user = payload.member
 
@@ -110,13 +110,40 @@ class MyClient(discord.Client):
 			return
 
 		for entry in list(response_manager.static_reactions):
-			if entry["channel_id"] != message.channel.id:
+			if entry["message_id"] != reaction.message.id:
 				continue
 			if entry["user_id"] not in (0, message.author.id):
 				continue
 
 			# Trigger callback
 			await response_manager.handle_reaction(self, reaction, user, entry["command"])
+			return # Only one waiter per message
+
+	async def on_raw_reaction_remove(self, payload):
+		"""
+		Called when a reaction is removed on any message.
+		Ignores other bots. Checks for waiting responses.
+		"""
+
+		message = await self.get_channel(payload.channel_id).fetch_message(payload.message_id)
+		reaction = discord.utils.get(message.reactions, emoji=payload.emoji.name, message=message)
+
+		user = message.guild.get_member(payload.user_id)
+
+		if user is None:
+			user = await message.guild.fetch_member(payload.user_id)
+
+		if user.bot:
+			return
+
+		for entry in list(response_manager.static_reactions):
+			if entry["message_id"] != reaction.message.id:
+				continue
+			if entry["user_id"] not in (0, message.author.id):
+				continue
+
+			# Trigger callback
+			await response_manager.handle_reaction_remove(self, reaction, user, entry["command"])
 			return # Only one waiter per message
 
 	def start_scheduled_tasks(self):
