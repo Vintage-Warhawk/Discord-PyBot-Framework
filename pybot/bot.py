@@ -1,7 +1,7 @@
 """
 File: bot.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-24
+Last Edit: 2025-11-30
 
 Description:
 This is the main entry point for the Discord bot framework. It sets up the Discord client,
@@ -26,6 +26,7 @@ TIMEZONE = pytz.timezone("America/Chicago")
 
 # Discord client intents configuration
 intents = discord.Intents.default()
+intents.members = True
 intents.message_content = True
 intents.messages = True
 intents.reactions = True
@@ -52,6 +53,13 @@ class MyClient(discord.Client):
 		print(f"Logged in as \033[32m{self.user}\033[0m")
 		self.start_scheduled_tasks()
 
+		for name, task in task_manager.get_tasks("on_ready").items():
+			asyncio.create_task(task.run(self))
+
+	async def on_member_join(self, member):
+		for name, task in task_manager.get_tasks("on_join").items():
+			asyncio.create_task(task.run(self, member))
+
 	async def on_message(self, message):
 		"""
 		Called when a new message is sent.
@@ -73,7 +81,10 @@ class MyClient(discord.Client):
 			response_manager.awaiting_messages.remove(entry)
 			return  # Only one waiter per message
 
-		await command_manager.handle_message(message)
+		await command_manager.handle_message(self, message)
+
+		for name, task in task_manager.get_tasks("on_message").items():
+			asyncio.create_task(task.run(self, message))
 
 	async def on_reaction_add(self, reaction, user):
 		"""
@@ -91,9 +102,12 @@ class MyClient(discord.Client):
 				continue
 
 			# Trigger callback
-			await response_manager.handle_reaction(self, reaction, user, entry["command"])
+			await response_manager.handle_reaction(self, message, reaction.emoji, user, entry["command"])
 			response_manager.awaiting_reactions.remove(entry)
 			return # Only one waiter per message
+
+		for name, task in task_manager.get_tasks("on_reaction_add").items():
+			asyncio.create_task(task.run(self, message))
 
 	async def on_raw_reaction_add(self, payload):
 		"""
@@ -102,7 +116,6 @@ class MyClient(discord.Client):
 		"""
 
 		message = await self.get_channel(payload.channel_id).fetch_message(payload.message_id)
-		reaction = discord.utils.get(message.reactions, emoji=payload.emoji.name, message=message)
 
 		user = payload.member
 
@@ -110,14 +123,17 @@ class MyClient(discord.Client):
 			return
 
 		for entry in list(response_manager.static_reactions):
-			if entry["message_id"] != reaction.message.id:
+			if entry["message_id"] != message.id:
 				continue
 			if entry["user_id"] not in (0, message.author.id):
 				continue
 
 			# Trigger callback
-			await response_manager.handle_reaction(self, reaction, user, entry["command"])
+			await response_manager.handle_reaction(self, message, payload.emoji, user, entry["command"])
 			return # Only one waiter per message
+
+		for name, task in task_manager.get_tasks("on_raw_reaction_add").items():
+			asyncio.create_task(task.run(self, message))
 
 	async def on_raw_reaction_remove(self, payload):
 		"""
@@ -126,7 +142,6 @@ class MyClient(discord.Client):
 		"""
 
 		message = await self.get_channel(payload.channel_id).fetch_message(payload.message_id)
-		reaction = discord.utils.get(message.reactions, emoji=payload.emoji.name, message=message)
 
 		user = message.guild.get_member(payload.user_id)
 
@@ -137,14 +152,17 @@ class MyClient(discord.Client):
 			return
 
 		for entry in list(response_manager.static_reactions):
-			if entry["message_id"] != reaction.message.id:
+			if entry["message_id"] != message.id:
 				continue
 			if entry["user_id"] not in (0, message.author.id):
 				continue
 
 			# Trigger callback
-			await response_manager.handle_reaction_remove(self, reaction, user, entry["command"])
+			await response_manager.handle_reaction_remove(self, message, payload.emoji, user, entry["command"])
 			return # Only one waiter per message
+
+		for name, task in task_manager.get_tasks("on_raw_reaction_remove").items():
+			asyncio.create_task(task.run(self, message))
 
 	def start_scheduled_tasks(self):
 		"""

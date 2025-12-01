@@ -1,7 +1,7 @@
 """
 File: tasks.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-21
+Last Edit: 2025-11-25
 """
 
 from datetime import datetime, timedelta
@@ -14,35 +14,6 @@ from library.config_manager import GetConfig
 
 # Create a ScheduleManager instance to register tasks
 manager = ScheduleManager()
-
-# -----------------------------
-# Example Schedule: Test
-# -----------------------------
-class TestSchedule:
-	"""
-	Schedule that runs hooked tasks every 10 seconds.
-	"""
-	async def get(self, client):
-		seconds = 10
-		return seconds
-
-# Register the test schedule
-manager.register_schedule("test", TestSchedule())
-
-# -----------------------------
-# Example Schedule: Minutely
-# -----------------------------
-class MinutelySchedule:
-	"""
-	Schedule that runs hooked tasks on the minute.
-	"""
-	async def get(self, client):
-		now = datetime.now(TIMEZONE).replace(microsecond=0)
-		next_minute = (now + timedelta(minutes=1)).replace(second=0, microsecond=0)
-		return (next_minute - now).total_seconds()
-
-# Register the minutely schedule
-manager.register_schedule("minutely", MinutelySchedule())
 
 # -----------------------------
 # Example Schedule: Hourly

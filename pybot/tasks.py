@@ -1,8 +1,10 @@
 """
 File: tasks.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-21
+Last Edit: 2025-11-30
 """
+
+import discord
 
 from library.task_manager import TaskManager
 from library.config_manager import GetConfig
@@ -11,30 +13,24 @@ from library.config_manager import GetConfig
 manager = TaskManager()
 
 # -----------------------------
-# Example Task: Minutely
+# Example Task: Join
 # -----------------------------
-class MinutelyTask:
+class JoinTask:
 	"""
-	Task that runs every minute.
-	Sends a message to the configured home channel for each guild.
+	Task that gives every new user a role.
 	"""
 
-	async def run(self, client):
-		"""
-		Executes the minutely task for all guilds the bot is in.
+	async def run(self, client, member):
 
-		Args:
-			client (discord.Client): The bot instance, used to access guilds and channels.
-		"""
-		for guild in client.guilds:
-			home_channel_id = GetConfig("home_channels", guild_id=guild.id).value()
-			if home_channel_id:
-				channel = guild.get_channel(int(home_channel_id))
-				if channel:
-					await channel.send("Minutely task executed!")
+		role_name = GetConfig("default_role", guild_id=member.guild.id).value()
+		role = discord.utils.get(member.guild.roles, name=role_name)
 
-# Register the hourly task
-#manager.register_task("minutely", "Example Task", MinutelyTask()) #Removed to prevent initial spam
+		if role != None:
+			await member.add_roles(role)
+			print(f"\033[33m[Server]\033[32m {member.name}\033[0m joined and was set as \033[33m{role_name}\033[0m")
+
+# Register the Join task
+manager.register_task("on_join", "Default Role", JoinTask())
 
 # -----------------------------
 # Example Task: Hourly

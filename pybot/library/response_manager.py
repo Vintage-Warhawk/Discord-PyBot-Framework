@@ -1,7 +1,7 @@
 """
 File: response_manager.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-24
+Last Edit: 2025-11-25
 """
 
 import datetime
@@ -87,7 +87,7 @@ class ResponseManager:
 		except Exception as e:
 			print(f"[ResponseManager] Error in message callback: {e}")
 
-	async def handle_reaction(self, client, reaction, user, command):
+	async def handle_reaction(self, client, message, reaction, user, command):
 		"""
 		Dispatch an incoming reaction event to the command class's on_reaction() method.
 
@@ -104,12 +104,12 @@ class ResponseManager:
 			return
 
 		try:
-			print(f"\033[33m[Response]\033[32m [{user.name}]\033[0m Reacted: \033[33m{reaction.emoji} \033[34m({reaction.message.id}) \033[0m")
-			await callback.on_reaction(client, reaction, user)
+			print(f"\033[33m[Response]\033[32m [{user.name}]\033[0m Reacted: \033[34m({message.id}) \033[0m")
+			await callback.on_reaction(client, message, reaction, user)
 		except Exception as e:
 			print(f"[ResponseManager] Error in reaction callback: {e}")
 
-	async def handle_reaction_remove(self, client, reaction, user, command):
+	async def handle_reaction_remove(self, client, message, reaction, user, command):
 		"""
 		Dispatch an incoming reaction removal event to the command class's on_reaction_remove() method.
 
@@ -126,8 +126,8 @@ class ResponseManager:
 			return
 
 		try:
-			print(f"\033[33m[Response]\033[32m [{user.name}]\033[0m Unreacted: \033[33m{reaction.emoji} \033[34m({reaction.message.id}) \033[0m")
-			await callback.on_reaction_remove(client, reaction, user)
+			print(f"\033[33m[Response]\033[32m [{user.name}]\033[0m Unreacted: \033[34m({message.id}) \033[0m")
+			await callback.on_reaction_remove(client, message, reaction, user)
 		except Exception as e:
 			print(f"[ResponseManager] Error in reaction remove callback: {e}")
 
