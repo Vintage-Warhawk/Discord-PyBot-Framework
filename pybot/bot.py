@@ -1,7 +1,7 @@
 """
 File: bot.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-30
+Last Edit: 2025-12-2
 
 Description:
 This is the main entry point for the Discord bot framework. It sets up the Discord client,
@@ -173,6 +173,7 @@ class MyClient(discord.Client):
 		async def schedule_loop(interval_name, schedule):
 			try:
 				while True:
+					await asyncio.sleep(1) # Buffer to prevent double hook calls.
 					seconds = await schedule.get(self)
 					await asyncio.sleep(seconds)
 					for name, task in task_manager.get_tasks(interval_name).items():

@@ -1,7 +1,7 @@
 """
 File: commands.py
 Maintainer: Vintage Warhawk
-Last Edit: 2025-11-25
+Last Edit: 2025-11-30
 
 Description:
 This file contains all custom command classes for the Discord bot framework.
@@ -12,9 +12,9 @@ when the command is invoked.
 
 import io
 import datetime
+import time
 import discord
-from discord import Embed
-from discord import ui, Interaction, TextStyle
+from discord import ui
 
 from library.command_manager import CommandManager
 from library.config_manager import SetConfig
@@ -22,11 +22,11 @@ from library.config_manager import GetConfig
 from library.response_manager import ResponseManager
 from library.emoji_converter import EmojiConverter
 
-# Create a CommandManager and ReponseManager instance for registering commands
+# Create a CommandManager, ReponseManager and TaskManager instance for registering commands
 manager = CommandManager()
 response = ResponseManager()
 response.set_command_manager(manager)
-
+from tasks import manager as task_manager
 
 # -----------------------------
 # Example Command: !help
@@ -35,7 +35,7 @@ class HelpCommand:
 
 	async def run(self, client, message, args):
 
-		embed = Embed(title="PyBot Commands", color=0xF39C12)
+		embed = discord.Embed(title="PyBot Commands", color=0xF39C12)
 
 		for command, desc in manager.helps.items():
 			desc = desc.split('|')
@@ -104,7 +104,7 @@ class HomeCommand:
 
 		# Store the channel ID for this guild in the config system
 		SetConfig("home_channels", str(message.channel.id), guild_id=message.guild.id)
-		print(f"\033[33m[Config]\033[0m new home directory set: \033[33m{message.channel.name} ({message.channel.id})\033[0m")
+		print(f"\033[33m[Config]\033[0m new home directory set: \033[33m{message.channel.name} \033[34m({message.channel.id})\033[0m")
 		await message.channel.send("This channel is now set as the home channel for this server!")
 
 # Register the !home command
@@ -158,7 +158,7 @@ class EmbedCommand:
 			channel = message.guild.get_channel(int(home_channel_id))
 			if channel:
 
-				embed = Embed(title="Embed")
+				embed = discord.Embed(title="discord.Embed")
 				if message.attachments:
 					if message.attachments[0]:
 						embed.set_image(url=message.attachments[0].url)
@@ -175,6 +175,154 @@ class EmbedCommand:
 # Register the !home command
 manager.register_command("!embed", EmbedCommand(), " @message ~attachment | Sends the following message and attachemnt to the message board as an embed.")
 
+# -----------------------------
+# Example Command: !tickethome
+# -----------------------------
+# Sends a message with a button to close the ticket.
+class AdminTicketButton(ui.View):
+	def __init__(self):
+		super().__init__(timeout=None)
+
+	@ui.button(label="Close", style=discord.ButtonStyle.danger, custom_id="ticket-close")
+	async def open(self, interaction: discord.Interaction, button):
+		guild_tickets = GetConfig("tickets", guild_id=interaction.guild.id).value() or []
+
+		for entry in list(guild_tickets):
+			if entry["channel_id"] != interaction.channel.id:
+				continue
+			await interaction.response.send_message("Ticket Closed.", ephemeral=True)
+
+			guild = interaction.guild
+			user = guild.get_member(entry["user_id"])
+			if user:
+				try:
+					await user.send(f"Your submission `{entry["ticket_id"]}` in {guild.name} has been closed.")
+				except:
+					pass
+	
+			await interaction.channel.delete(reason=f"{entry["ticket_id"]} closed.")
+
+			guild_tickets.remove(entry)
+			SetConfig("tickets", guild_tickets, guild_id=guild.id)
+			print(f"\033[33m[Ticket]\033[0m Ticket Closed by \033[33m{interaction.user.name} \033[34m({entry["ticket_id"]})\033[0m")
+
+
+# Creates a Modal so the user can submit a ticket.
+class TicketModal(ui.Modal, title="Ticket Submission"):
+	def __init__(self, view):
+		super().__init__()
+		self.view_message = view
+		self.reason = ui.TextInput(label="Reason:")
+		self.desc = ui.TextInput(label="Description:", style=discord.TextStyle.paragraph)
+		self.add_item(self.reason)
+		self.add_item(self.desc)
+
+	async def on_submit(self, interaction: discord.Interaction):
+		ticket_id = f"ticket-{int(time.time() * 1000)}"
+		print(f"\033[33m[Ticket]\033[0m New Ticket Submission: \033[33m{self.reason.value} \033[34m({ticket_id})\033[0m")
+
+		guild = interaction.guild
+		user = interaction.user
+		category = interaction.channel.category
+
+		admin_roles = [r for r in guild.roles if r.permissions.administrator]
+		overwrites = {
+			guild.default_role: discord.PermissionOverwrite(
+				view_channel=False,
+				send_messages=False
+			),
+			user: discord.PermissionOverwrite(
+				view_channel=True,
+				send_messages=True
+			),
+			guild.me: discord.PermissionOverwrite(
+				view_channel=True,
+				send_messages=True,
+				manage_channels=True
+			)
+		}
+
+		for role in admin_roles:
+			overwrites[role] = discord.PermissionOverwrite(
+				view_channel=True,
+				send_messages=True
+			)
+
+		channel = await guild.create_text_channel(
+			ticket_id,
+			overwrites=overwrites,
+			category=category
+		)
+
+		embed = discord.Embed(
+		    title=self.reason.value,
+		    description=self.desc.value,
+		    color=0x3498db
+		)
+
+		await channel.send(
+			f"{user.mention} opened {ticket_id}",
+			embed=embed,
+			view=AdminTicketButton()
+		)
+
+		ticket = {"user_id": user.id, "ticket_id": ticket_id, "channel_id": channel.id}
+
+		guild_tickets = GetConfig("tickets", guild_id=guild.id).value() or []
+		guild_tickets.append(ticket)
+		SetConfig("tickets", guild_tickets, guild_id=guild.id)
+
+		await interaction.response.send_message("Ticket Submitted.", ephemeral=True)
+
+# Sends a message with a button to open the Modal.
+class TicketButton(ui.View):
+	def __init__(self):
+		super().__init__(timeout=None)
+
+	@ui.button(label="Submit", style=discord.ButtonStyle.primary, custom_id="ticket_submission")
+	async def open(self, interaction: discord.Interaction, button):
+		await interaction.response.send_modal(TicketModal(interaction.message))
+
+class TicketTask:
+	"""
+	Task that re-registers the ticket button.
+	"""
+
+	async def run(self, client):
+		client.add_view(TicketButton()) # registers persistent button
+		client.add_view(AdminTicketButton())
+		print("\033[33m[Ticket]\033[0m Registered Ticket Buttons.")
+
+task_manager.register_task("on_ready", "Ticket Submit", TicketTask())
+
+# TicketHome Command
+class TicketHomeCommand:
+	"""
+	Command for admins to set the 'home' channel for tickets.
+	Usage: !home
+	"""
+
+	async def run(self, client, message, args):
+		"""
+		Saves the current channel as the ticket home channel in the persistent config.
+		Only users with administrator permissions can run this command.
+		"""
+		if not message.author.guild_permissions.administrator:
+			await message.channel.send("Only admins can set the ticket home channel.")
+			return
+
+		# Store the channel ID for this guild in the config system
+		SetConfig("ticket_channels", str(message.channel.id), guild_id=message.guild.id)
+		print(f"\033[33m[Config]\033[0m new ticket directory set: \033[33m{message.channel.name} \033[34m({message.channel.id})\033[0m")
+		await message.channel.send("This channel is now set as the ticket channel for this server!")
+
+		await message.channel.send(
+			"Want to submit a ticket?",
+			view=TicketButton()
+		)
+
+# Register the !tickethome command
+manager.register_command("!tickethome", TicketHomeCommand(), "| Sets the current channel as PyBot's ticket board.")
 
 # -----------------------------
 # Example Command: !autorole
@@ -198,13 +346,13 @@ class AutoRoleCommand:
 				self.view_message = view
 				self.sender_message = message
 				self.embedtitle = ui.TextInput(label="Title:")
-				self.embeddesc = ui.TextInput(label="Description: (use [roles] to insert list of roles)", style=TextStyle.paragraph)
-				self.embedroles = ui.TextInput(label="Roles (:emoji: Role Name)", style=TextStyle.paragraph)
+				self.embeddesc = ui.TextInput(label="Description: (use [roles] to list roles)", style=discord.TextStyle.paragraph)
+				self.embedroles = ui.TextInput(label="Roles (:emoji: Role Name)", style=discord.TextStyle.paragraph)
 				self.add_item(self.embedtitle)
 				self.add_item(self.embeddesc)
 				self.add_item(self.embedroles)
 
-			async def on_submit(self, interaction: Interaction):
+			async def on_submit(self, interaction: discord.Interaction):
 
 				await interaction.response.send_message("Creating AutoRole...", ephemeral=True)
 
@@ -247,7 +395,8 @@ class AutoRoleCommand:
 									pass
 								return
 
-							emoji = str(EmojiConverter.convert_emoji(emoji_name, interaction.guild))
+							emoji = EmojiConverter.convert_emoji(emoji_name, interaction.guild)
+
 							if emoji is None:
 								await interaction.followup.send(f"Invalid emoji: `{emoji_name}` doesn't exist.", ephemeral=True)
 								try:
@@ -256,7 +405,7 @@ class AutoRoleCommand:
 									pass
 								return
 
-							roles.append((emoji, role_name))
+							roles.append((str(emoji), role_name))
 
 				if len(roles) == 0:
 					await interaction.followup.send("No roles provided.", ephemeral=True)
@@ -265,6 +414,9 @@ class AutoRoleCommand:
 					except:
 						pass
 					return
+
+				for emoji, role_name in roles:
+					print(f"{emoji} {role_name}")
 
 				for _, role_name in roles:
 					if [r for e, r in roles].count(role_name) > 1:
@@ -289,14 +441,13 @@ class AutoRoleCommand:
 				description = description.replace("[roles]", "\n\n" + role_list)
 
 				# Create an embed for nicer formatting in Discord
-				embed = Embed(title=title, color=0x9CF312)
+				embed = discord.Embed(title=title, color=0x9CF312)
 				embed.description = description
 				sent = await interaction.channel.send(embed=embed)
 
 				# Add reaction emojis for users to click
 				# This allows users to self-assign roles by reacting
 				for emoji, _ in roles:
-					print(f"Reacted {emoji}")
 					await sent.add_reaction(emoji)
 
 				# Set a long-term reaction listener for this message
@@ -336,14 +487,16 @@ class AutoRoleCommand:
 				self.sender_message = message
 
 			@ui.button(label="Setup", style=discord.ButtonStyle.primary)
-			async def open(self, interaction: Interaction, button):
+			async def open(self, interaction: discord.Interaction, button):
 				if interaction.user != self.sender_message.author:
 					await interaction.response.send_message(
 						"You can't use this button.", ephemeral=True
 					)
 					return
-				await interaction.response.send_modal(AutoRoleModal(interaction.message, self.sender_message))
-
+				try:
+					await interaction.response.send_modal(AutoRoleModal(interaction.message, self.sender_message))
+				except Exception as e:
+					print(e)
 		await message.channel.send(
 			"Do you want to setup autoroles?",
 			view=AutoRoleButton(message)
@@ -405,6 +558,13 @@ class AutoRoleCommand:
 
 # Register the !autorole command
 manager.register_command("!autorole", AutoRoleCommand(), "| Initiates the autorole setup process.")
+
+
+
+
+
+
+
 
 
 
